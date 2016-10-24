@@ -1,0 +1,24 @@
+This is a multi-threaded webcrawler.
+Options can be set in the Options class.
+
+INSTRUCTIONS:
+1) Provide a base URL in the Options class.
+2) Change any other settings in the Options class like load assets, maximum pages to load or maximum number of threads.
+3) Run.
+4) After completed, a XML file will be generated containing the site-map.
+
+DESCRIPTION:
+This web crawler makes use of multiple threads to extract the assets and load each retrieved URL from the base URL provided. Each thread uses the jsoup library to get the page document and retrieve all URLS and assets. The crawl ignores duplicate URLS and handles all checked exceptions. 
+Before loading the URL, it is validated by encoding it to an ASCII string and using the Apache commons validator. Afterwards, the URL is checked to verify if it was already previously visited, if not, the URL is queued and added to a list of visited links. After being queued, if the maximum number of threads hasn’t been reached, a new thread is created, in which the page is downloaded and its URLS and assets extracted. After the thread completes, it delivers a code which represents the result. If the result was a successful operation, there is space for a new thread (if the limit has been reached) and a new URL can be loaded. If the result was a timeout, the URL is queued and the timeout for that specific URL is increased by 2 seconds, to a maximum of the specified max timeout. Different codes are delivered for different handled exceptions. After a thread completes, the status of the crawl is also checked through the number of running threads and queued URLS. If both are empty, all operations have completed, and a final XML with the site-map is generated.
+
+DESIGN DECISIONS:
+To create and manage the multiple threads used in the crawl, a thread controller class was implemented in the ThreadController class. Internally, this class controls when to start a new thread and contains the callback method for when a thread completes. This is a singleton class since there must only be a single instance acrosthe entire application managing thread creation.
+Each document is obtained and parsed in a separate thread. This is implemented in the PageParser class which implements the Runnable interface. This class downloads the page document and extracts all URLS and assets. Since these are the most time-consuming task of the crawl, the speed is greatly increased by implementing these tasks in a separate thread.
+To manage all the data extracted from the crawl a DataController class was created. This class implements a synchronized Set to store the queue, a synchronized List to store the visited links, and two Concurrent Maps to store the visited links and the site-map. This is a singleton class, since there must only be a single instance across the entire application managing the queue, visited links and building the site-map.
+All objects that are modified by multiple threads, like the collections, are synchronized to avoid concurrency problems.
+This web crawler was implemented using the SOLID guidelines. Each class and its specific functionality can be easily replaced and its functionality extended without altering the rest of the program by implementing the corresponding interface. 
+A Javadoc was also generated, including documentation for all interfaces.
+
+CHALLENGES:
+The building and display of the site-map was carefully studied, since it required the construction of a hierarchical structure from the information extracted by several asynchronous threads. Since these threads can terminate in any order, the information needs to be inserted in the correct place. To implement this, the site-map is build using a Map inside a Map. Both maps have the same structure, with a URL as the key (parent) and a Map of URLS as the value (children). To insert the new information in the correct branch, only the parent is needed since it is unique. The structure is traversed recursively until the parent is found and the new information is inserted.
+Displaying such a big amount of information was also a difficult task. In order to allow the visualisation of the URL relations, the site-map is traversed recursively and a XML file is built. This displays the information for each URL, including assets and all of the children URLS. A relatively large structure is generated inside the XML, which can prove difficult to visualise in browsers (XmlExplorer works perfectly: https://xmlexplorer.codeplex.com).

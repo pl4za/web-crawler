@@ -1,0 +1,4 @@
+https://plus.google.com/+Gocardless
+https://gocardless.com/assets/connect/connect-manifest-a4d1a9e46877822a60f048e162e8bbc00ae409a16f587d5f57b721a0217e4d88.css
+https://manage.gocardless.com
+https://cloud.typography.com/6271452/780042/css/fonts.css
